@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.0.0"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -17,7 +19,6 @@ resource "aws_security_group" "web_sg" {
 
   ingress {
     description = "SSH from anywhere"
-
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -26,7 +27,6 @@ resource "aws_security_group" "web_sg" {
 
   egress {
     description = "Allow outbound traffic"
-
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
