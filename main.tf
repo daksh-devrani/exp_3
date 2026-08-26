@@ -5,7 +5,8 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
- }  }
+    }
+  }
 }
 
 provider "aws" {
@@ -13,14 +14,16 @@ provider "aws" {
 }
 
 resource "aws_security_group" "web_sg" {
-name        = "web-sg"
-description = "Security group for web server"
+  name        = "web-sg"
+  description = "Security group for web server"
 
-ingress {
-description = "SSH from trusted IP only"
-from_port = 22
-to_port = 22
-protocol = "tcp"
-cidr_blocks = ["YOUR_PUBLIC_IP/32"]
-}
+  ingress {
+    description = "SSH from anywhere"
+
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
