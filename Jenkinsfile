@@ -4,7 +4,10 @@ pipeline {
     options {
         ansiColor('xterm')
         timestamps()
-        buildDiscarder(logRotator(numToKeepStr: '20'))
+
+        buildDiscarder(
+            logRotator(numToKeepStr: '20')
+        )
     }
 
     environment {
@@ -23,35 +26,24 @@ pipeline {
             }
         }
 
-        stage('Format Check') {
-            steps {
-                sh 'terraform fmt -check -recursive -diff'
-            }
-        }
-
-        stage('Initialize') {
-            steps {
-                sh 'terraform init -input=false'
-            }
-        }
-
         stage('Validate') {
             steps {
-                sh 'terraform validate'
-            }
-        }
+                sh 'terraform fmt -check -recursive -diff'
 
-        stage('Lint') {
-            steps {
-                sh 'tflint --init'
-                sh 'tflint --format compact'
+                sh 'terraform init -input=false'
+
+                sh 'terraform validate'
             }
         }
 
         stage('Security Scan') {
             steps {
+                sh 'tflint --init && tflint --format compact'
+
                 sh 'tfsec . --format junit --out tfsec-report.xml --soft-fail'
+
                 sh 'tfsec . --minimum-severity HIGH'
+                // fails the build on HIGH
             }
 
             post {
@@ -64,9 +56,10 @@ pipeline {
         stage('Plan') {
             steps {
                 sh 'terraform plan -input=false -out=tfplan'
+
                 sh 'terraform show -no-color tfplan > tfplan.txt'
 
-                archiveArtifacts artifacts: 'tfplan,tfplan.txt', fingerprint: true
+                archiveArtifacts artifacts: 'tfplan, tfplan.txt', fingerprint: true
             }
         }
 
@@ -100,6 +93,10 @@ pipeline {
 
         failure {
             echo 'Pipeline failed — inspect the stage that went red.'
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
